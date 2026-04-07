@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finance Report - Creative Paradise</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+        .header { text-align: center; margin-bottom: 30px; }
+        .header h2 { margin: 0; color: #2c3e50; }
+        .header p { margin: 5px 0; color: #7f8c8d; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #f8f9fa; color: #2c3e50; }
+        .text-right { text-align: right; }
+        .fw-bold { font-weight: bold; }
+        .totals { margin-top: 20px; background-color: #f8f9fa; }
+        
+        /* Print ထုတ်ချိန်တွင် Button များမပေါ်စေရန် */
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; }
+        }
+    </style>
+</head>
+<body onload="window.print()"> <div class="no-print" style="margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #0d6efd; color: white; border: none; cursor: pointer;">PDF အဖြစ် သိမ်းမည် (Print)</button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; cursor: pointer; margin-left: 10px;">ပိတ်မည်</button>
+    </div>
+
+    <div class="header">
+        <h2>Creative Paradise Co., Ltd.</h2>
+        <p>Finance & Accounting Ledger Report</p>
+        <p>ထုတ်ယူသည့်ရက်စွဲ: <script>document.write(new Date().toLocaleDateString());</script></p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>နေ့စွဲ</th>
+                <th>Voucher No.</th>
+                <th>အကြောင်းအရာ</th>
+                <th>Account Head</th>
+                <th>တည်နေရာ</th>
+                <th class="text-right">ငွေထွက် (Dr)</th>
+                <th class="text-right">ငွေဝင် (Cr)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in vouchers %}
+            <tr>
+                <td>{{ row[0] }}</td>
+                <td>{{ row[2] }}</td>
+                <td>{{ row[3] }}</td>
+                <td>{{ row[4] }}</td>
+                <td>{{ row[7] }}</td>
+                <td class="text-right">{{ '{:,.2f}'.format(row[5]) if row[5] > 0 else '-' }}</td>
+                <td class="text-right">{{ '{:,.2f}'.format(row[6]) if row[6] > 0 else '-' }}</td>
+            </tr>
+            {% endfor %}
+            <tr class="totals">
+                <td colspan="5" class="text-right fw-bold">စုစုပေါင်း (Total):</td>
+                <td class="text-right fw-bold" style="color: red;">{{ '{:,.2f}'.format(total_dr) }}</td>
+                <td class="text-right fw-bold" style="color: green;">{{ '{:,.2f}'.format(total_cr) }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

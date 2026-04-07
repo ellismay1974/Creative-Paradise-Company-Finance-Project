@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create PO</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body { background-color: #f8f9fc; padding: 40px; font-family: sans-serif; }</style>
+</head>
+<body>
+<div class="container" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-3 p-4 border-top border-primary border-4">
+        <h4 class="text-primary mb-4"><i class="fas fa-shopping-cart me-2"></i>ပစ္စည်းဝယ်ယူရန် တောင်းခံခြင်း (PO)</h4>
+        <form action="/add_po" method="POST">
+            <div class="mb-3">
+                <label>ပစ္စည်းအမည် (Item Name)</label>
+                <input type="text" name="item_name" class="form-control" placeholder="ဥပမာ - သံချောင်း (၁၆ မီလီ)" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>အရေအတွက် (Qty)</label>
+                    <input type="number" name="qty" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>ခန့်မှန်း ကျသင့်ငွေ (Estimated Amount)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="ခန့်မှန်းတန်ဖိုး" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label>ဝယ်ယူမည့် ဆိုင်/ကုမ္ပဏီ (Supplier Name)</label>
+                <input type="text" name="supplier" class="form-control" placeholder="ဥပမာ - ရွှေတောင် ကုမ္ပဏီ" required>
+            </div>
+            <div class="mb-4">
+                <label style="color: #5a5c69; font-weight: bold; margin-bottom: 8px;">ရောက်ရှိမည့် နေရာ (Target Location)</label>
+                <select name="location" class="form-select" required>
+                    <option value="">-- ရွေးချယ်ပါ --</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 fw-bold">PO တင်မည် (Submit)</button>
+            <a href="/po" class="btn btn-outline-secondary w-100 mt-2">နောက်သို့</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>

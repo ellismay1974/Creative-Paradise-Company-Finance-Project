@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Creative Paradise</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; }
+        .sidebar { 
+            height: 100vh; 
+            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); 
+            color: white; 
+            padding-top: 25px; 
+            overflow-y: auto; /* ဤအပိုင်း အသစ်ထည့်ထားသည် */
+            padding-bottom: 20px; /* အောက်ခြေတွင် ကပ်မနေစေရန် */
+        }
+        .sidebar h5 { font-weight: 800; color: #fff; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; }
+        .sidebar a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
+        .sidebar a:hover, .sidebar a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
+        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        
+        /* Summary Card ဒီဇိုင်းများ */
+        .summary-card { border-radius: 10px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.3s; }
+        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+        .border-left-primary { border-left: 5px solid #4e73df !important; }
+        .border-left-success { border-left: 5px solid #1cc88a !important; }
+        .border-left-info { border-left: 5px solid #36b9cc !important; }
+        .border-left-warning { border-left: 5px solid #f6c23e !important; }
+        
+        .chart-container { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 20px; }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-2 sidebar d-none d-md-block">
+            <h5 class="text-center"><i class="fas fa-building me-2"></i>C. Paradise</h5>
+            <hr class="sidebar-divider mx-3 bg-light opacity-25">
+            
+            <a href="/" class="active"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+            
+            {% if role in ['Admin', 'Store Keeper'] %}
+            <a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory (GRN/GIN)</a>
+            {% endif %}
+            
+            {% if role in ['Admin', 'Finance'] %}
+            <a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance Vouchers</a>
+            {% endif %}
+            
+            {% if role in ['Admin', 'Site Engineer'] %}
+            <a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Site Requisitions</a>
+            {% endif %}
+            
+            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}
+            <a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>
+            {% endif %}
+            
+            {% if role == 'Admin' %}
+            <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
+            <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ သတ်မှတ်ရန်</a>
+            <a href="/users"><i class="fas fa-users me-2"></i> အသုံးပြုသူများ (Users)</a>
+            {% endif %}
+            
+            <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
+        </div>
+
+        <div class="col-md-10 p-0" style="height: 100vh; overflow-y: auto;">
+            <div class="top-nav d-flex justify-content-between align-items-center">
+                <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">System Dashboard</h4>
+                <div class="d-flex align-items-center">
+                    <span class="me-3 text-muted">မင်္ဂလာပါ, <strong class="text-primary">{{ session['user'] }}</strong> ({{ role }})</span>
+                </div>
+            </div>
+
+            <div class="p-4">
+                <div class="row mb-4">
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card summary-card border-left-primary h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1" style="font-size: 0.8rem;">စုစုပေါင်း ဝင်ငွေ (Income)</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ '{:,.0f}'.format(total_income) }} Ks</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-wallet fa-2x text-gray-300" style="color: #dddfeb;"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card summary-card border-left-success h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1" style="font-size: 0.8rem;">စုစုပေါင်း ထွက်ငွေ (Expense)</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ '{:,.0f}'.format(total_expense) }} Ks</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-money-bill-wave fa-2x text-gray-300" style="color: #dddfeb;"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card summary-card border-left-info h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1" style="font-size: 0.8rem;">ပစ္စည်း လက်ကျန် စုစုပေါင်း</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stock_balance }} ခု</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-boxes fa-2x text-gray-300" style="color: #dddfeb;"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-xl-3 col-md-6 mb-4">
+                        <div class="card summary-card border-left-warning h-100 py-2">
+                            <div class="card-body">
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col mr-2">
+                                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1" style="font-size: 0.8rem;">စောင့်ဆိုင်းဆဲ PO (Pending)</div>
+                                        <div class="h5 mb-0 font-weight-bold text-gray-800">{{ pending_po }} စောင်</div>
+                                    </div>
+                                    <div class="col-auto"><i class="fas fa-shopping-cart fa-2x text-gray-300" style="color: #dddfeb;"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-lg-5 mb-4">
+                        <div class="chart-container">
+                            <h6 class="m-0 font-weight-bold text-primary mb-3">ငွေဝင် / ငွေထွက် အချိုး (Finance)</h6>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="financeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-7 mb-4">
+                        <div class="chart-container">
+                            <h6 class="m-0 font-weight-bold text-primary mb-3">လက်ကျန်အများဆုံး ပစ္စည်းများ (Top 5)</h6>
+                            <div style="position: relative; height: 250px; width: 100%;">
+                                <canvas id="inventoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="backend-data" 
+                     data-income="{{ total_income | default(0) }}" 
+                     data-expense="{{ total_expense | default(0) }}" 
+                     data-labels='{{ stock_labels | tojson | safe }}' 
+                     data-values='{{ stock_values | tojson | safe }}' 
+                     style="display:none;">
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ၁။ HTML ထဲတွင် ဝှက်ထားသော Data များကို JavaScript မှ ပြန်လှမ်းယူခြင်း (Error ကင်းစေရန်)
+    const backendData = document.getElementById('backend-data');
+    const income = parseInt(backendData.getAttribute('data-income')) || 0;
+    const expense = parseInt(backendData.getAttribute('data-expense')) || 0;
+    const labels = JSON.parse(backendData.getAttribute('data-labels') || '[]');
+    const values = JSON.parse(backendData.getAttribute('data-values') || '[]');
+
+    // ၂။ Finance Doughnut Chart ဆွဲခြင်း
+    const ctxFinance = document.getElementById('financeChart').getContext('2d');
+    new Chart(ctxFinance, {
+        type: 'doughnut',
+        data: {
+            labels: ['ဝင်ငွေ (Income)', 'ထွက်ငွေ (Expense)'],
+            datasets: [{
+                data: [income, expense],
+                backgroundColor: ['#1cc88a', '#e74a3b'],
+                hoverBackgroundColor: ['#17a673', '#e02d1b'],
+                hoverBorderColor: "rgba(234, 236, 244, 1)",
+            }]
+        },
+        options: { maintainAspectRatio: false, cutout: '70%' }
+    });
+
+    // ၃။ Inventory Bar Chart ဆွဲခြင်း
+    const ctxInventory = document.getElementById('inventoryChart').getContext('2d');
+    new Chart(ctxInventory, {
+        type: 'bar',
+        data: {
+            labels: labels, 
+            datasets: [{
+                label: 'လက်ကျန် အရေအတွက်',
+                data: values,
+                backgroundColor: '#4e73df',
+                hoverBackgroundColor: '#2e59d9',
+                borderColor: '#4e73df',
+                borderRadius: 4
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+</script>
+</body>
+</html>

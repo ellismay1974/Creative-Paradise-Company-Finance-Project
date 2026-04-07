@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Issue Material (GIN)</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>body { background-color: #f8f9fc; padding: 40px; font-family: sans-serif; }</style>
+</head>
+<body>
+<div class="container" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-3 p-4">
+        <h4 class="text-danger mb-4"><i class="fas fa-truck-loading me-2"></i>ဆိုက်သို့ ပစ္စည်းထုတ်ပေးရန် (GIN)</h4>
+        <form action="/add_gin" method="POST">
+            <div class="mb-3">
+                <label>ပစ္စည်းအမည် (Item Name)</label>
+                <input type="text" name="item_name" class="form-control" placeholder="ဥပမာ - ဘိလပ်မြေ" required>
+            </div>
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label>ထုတ်ပေးမည့် အရေအတွက် (Qty)</label>
+                    <input type="number" name="qty" class="form-control" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label>ခန့်မှန်း တန်ဖိုး (Estimated Value)</label>
+                    <input type="number" name="amount" class="form-control" placeholder="ဆိုက်စရိတ် တွက်ရန်" required>
+                </div>
+            </div>
+            <div class="mb-4">
+                <label>ပစ္စည်းပို့မည့် ဆိုက် (Target Site)</label>
+                <select name="location" class="form-select" required>
+                    <option value="">-- ရွေးချယ်ပါ --</option>
+                    {% for loc in locations %}
+                    <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-danger w-100">ထုတ်ပေးမည် (Issue)</button>
+            <a href="/requisition" class="btn btn-outline-secondary w-100 mt-2">နောက်သို့</a>
+        </form>
+    </div>
+</div>
+</body>
+</html>

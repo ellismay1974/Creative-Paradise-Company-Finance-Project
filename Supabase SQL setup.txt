@@ -1,0 +1,58 @@
+-- ၁။ အသုံးပြုသူများ ဇယား (Users Table - Role-based Access အတွက်)
+CREATE TABLE Users (
+    ID SERIAL PRIMARY KEY,
+    Username TEXT UNIQUE NOT NULL,
+    Password TEXT NOT NULL,
+    Role TEXT NOT NULL, -- ရာထူးများ: Admin, Finance, Store Keeper, Site Engineer
+    Created_At TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- (စမ်းသပ်ရန်အတွက် Master Admin အကောင့်တစ်ခုကို အလိုအလျောက် ထည့်သွင်းထားပါမည်)
+INSERT INTO Users (Username, Password, Role) 
+VALUES ('master', 'admin123', 'Admin');
+
+
+-- ၂။ တည်နေရာနှင့် ပရောဂျက်များ ဇယား (Locations Table)
+CREATE TABLE Locations (
+    Location_ID VARCHAR(20) PRIMARY KEY,
+    Base_Type TEXT NOT NULL,
+    Project_Custom_Name TEXT,
+    Status TEXT DEFAULT 'Active'
+);
+
+-- (ပရောဂျက်တည်နေရာ အကြမ်းဖျင်းများကို အလိုအလျောက် ထည့်သွင်းထားပါမည်)
+INSERT INTO Locations (Location_ID, Base_Type, Project_Custom_Name) VALUES
+('LOC-001', 'Head Office', ''),
+('LOC-002', 'Warehouse', 'မကွေး'),
+('LOC-003', 'Site A', 'မင်္ဂလာဒုံ'),
+('LOC-004', 'Site B', 'တောင်ဒဂုံ');
+
+
+-- ၃။ ပစ္စည်းစာရင်း အဝင်/အထွက် ဇယား (Inventory_Ledger Table)
+CREATE TABLE Inventory_Ledger (
+    Ledger_ID SERIAL PRIMARY KEY,
+    Record_Date DATE DEFAULT CURRENT_DATE,
+    Form_Type TEXT NOT NULL, -- ဥပမာ: GRN, GIN, MTN, GRF
+    Form_No TEXT NOT NULL,
+    Item_Code TEXT NOT NULL,
+    Item_Name TEXT,
+    Qty_In NUMERIC DEFAULT 0,
+    Qty_Out NUMERIC DEFAULT 0,
+    From_Location VARCHAR(20),
+    To_Location VARCHAR(20),
+    Remarks TEXT
+);
+
+
+-- ၄။ ငွေစာရင်း အဝင်/အထွက် ဇယား (Finance_Ledger Table)
+CREATE TABLE Finance_Ledger (
+    Ledger_ID SERIAL PRIMARY KEY,
+    Record_Date DATE DEFAULT CURRENT_DATE,
+    Voucher_Type TEXT NOT NULL, -- ဥပမာ: CRK, DPK, Non Vr
+    Voucher_No TEXT NOT NULL,
+    Description TEXT,
+    Account_Head TEXT,
+    Dr_Amount NUMERIC DEFAULT 0,
+    Cr_Amount NUMERIC DEFAULT 0,
+    Project_Location VARCHAR(20)
+);
