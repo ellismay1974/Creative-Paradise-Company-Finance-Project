@@ -2,34 +2,36 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Income (CRK)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>body { background-color: #f8f9fc; padding: 40px; font-family: sans-serif; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>body { background-color: #f8f9fc; padding: 15px; font-family: sans-serif; }</style>
 </head>
 <body>
-<div class="container" style="max-width: 600px;">
-    <div class="card shadow-sm border-0 rounded-3 p-4 border-top border-primary border-4">
-        <h4 class="text-primary mb-4"><i class="fas fa-hand-holding-usd me-2"></i>ဝင်ငွေပြေစာ (Cash Receipt)</h4>
+<div class="container p-0" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-2 border-top border-primary border-4">
+        <h5 class="text-primary mb-4 fw-bold"><i class="fas fa-hand-holding-usd me-2"></i>ဝင်ငွေပြေစာ (Cash Receipt)</h5>
         <form action="/add_income" method="POST">
             <div class="mb-3">
-                <label class="form-label fw-bold text-muted">အကြောင်းအရာ (Description)</label>
-                <input type="text" name="description" class="form-control" placeholder="ဥပမာ - ပရောဂျက် အရစ်ကျငွေရခြင်း၊ အဟောင်းရောင်းရငွေ" required>
+                <label class="form-label" style="font-size: 0.9rem;">အကြောင်းအရာ (Description)</label>
+                <input type="text" name="description" class="form-control" required>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-muted">ငွေပမာဏ (Amount Ks)</label>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">ငွေပမာဏ (Amount Ks)</label>
                     <input type="number" name="amount" class="form-control" required>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-muted">ငွေဝင်သည့်ပုံစံ</label>
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">ငွေဝင်မည့်ပုံစံ</label>
                     <select name="receipt_type" class="form-select" required>
                         <option value="Cash">လက်ငင်း (Cash in Hand)</option>
-                        <option value="Bank">ဘဏ်သို့ဝင်ငွေ (Cash at Bank)</option>
+                        <option value="Bank">ဘဏ် (Cash at Bank)</option>
                     </select>
                 </div>
             </div>
             <div class="mb-4">
-                <label class="form-label fw-bold text-muted">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
+                <label class="form-label" style="font-size: 0.9rem;">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
                 <select name="location" class="form-select" required>
                     <option value="">-- ရွေးချယ်ပါ --</option>
                     {% for loc in locations %}
@@ -37,7 +39,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary w-100 fw-bold">စာရင်းသွင်းမည်</button>
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="fas fa-save me-2"></i>စာရင်းသွင်းမည်</button>
             <a href="/finance" class="btn btn-outline-secondary w-100 mt-2">နောက်သို့</a>
         </form>
     </div>

@@ -297,22 +297,19 @@ def inventory():
     return render_template('inventory.html', role=role, session=session, items=items)
 
 # ==========================================
-# Finance Vouchers မျက်နှာပြင်
+# Finance Vouchers မျက်နှာပြင် (Filter ပြင်ဆင်ပြီး)
 # ==========================================
 @app.route('/finance')
 def finance():
-    if 'user' not in session:
-        return redirect('/login')
-        
+    if 'user' not in session: return redirect('/login')
     role = session.get('role')
-    if role not in ['Admin', 'Finance']:
-        return "Unauthorized Access", 403
+    if role not in ['Admin', 'Finance']: return "Unauthorized Access", 403
 
+    filter_type = request.args.get('filter') # Tab မှ ပို့လိုက်သော CRK, DPK စသည်ကို ဖတ်မည်
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        # Locations ဇယားနှင့် ချိတ်ဆက်၍ တည်နေရာအမည်ကိုပါ ဆွဲထုတ်မည်
-        cur.execute("""
+        base_query = """
             SELECT 
                 f.Ledger_ID, f.Record_Date, f.Voucher_Type, f.Voucher_No, 
                 f.Description, f.Account_Head, f.Dr_Amount, f.Cr_Amount, 
@@ -320,8 +317,14 @@ def finance():
                 COALESCE(l.Base_Type || ' (' || l.Project_Custom_Name || ')', f.Project_Location) AS Location_Name
             FROM Finance_Ledger f
             LEFT JOIN Locations l ON f.Project_Location = l.Location_ID
-            ORDER BY f.Record_Date DESC, f.Ledger_ID DESC
-        """)
+        """
+        if filter_type in ['CRK', 'DPK', 'JV']:
+            base_query += " WHERE f.Voucher_Type = %s ORDER BY f.Record_Date DESC, f.Ledger_ID DESC"
+            cur.execute(base_query, (filter_type,))
+        else:
+            base_query += " ORDER BY f.Record_Date DESC, f.Ledger_ID DESC"
+            cur.execute(base_query)
+            
         vouchers = cur.fetchall()
     except Exception as e:
         print("Finance Error:", e)
@@ -330,7 +333,7 @@ def finance():
         cur.close()
         conn.close()
 
-    return render_template('finance.html', role=role, session=session, vouchers=vouchers)
+    return render_template('finance.html', role=role, session=session, vouchers=vouchers, current_filter=filter_type)
 
 # ==========================================
 # ဝင်ငွေ (Income) သို့မဟုတ် အရောင်း (Sales) ပြေစာ သွင်းခြင်း
@@ -631,6 +634,7 @@ def add_gin():
 # ==========================================
 # Site-to-Site Transfer (ဆိုက်အချင်းချင်း ပစ္စည်းလွှဲပြောင်းခြင်း)
 # ==========================================
+@app.route('/transfer')                                 # <--- ဒီစာကြောင်းလေး အသစ်တိုးလိုက်ပါ
 @app.route('/add_transfer', methods=['GET', 'POST'])
 def add_transfer():
     if 'user' not in session: return redirect('/login')
@@ -769,16 +773,16 @@ def add_location():
     return redirect('/locations')
 
 # ==========================================
-# Report: Finance စာရင်းအား Excel သို့ ပြောင်းခြင်း
+# Report: Finance စာရင်းအား Excel သို့ ပြောင်းခြင်း (Filter ပြင်ဆင်ပြီး)
 # ==========================================
 @app.route('/export_finance_excel')
 def export_finance_excel():
     if 'user' not in session or session.get('role') not in ['Admin', 'Finance']: 
         return "Unauthorized Access", 403
 
+    filter_type = request.args.get('filter')
     conn = get_db_connection()
     try:
-        # Pandas ကို အသုံးပြု၍ Database မှ Data များကို DataFrame အဖြစ် တိုက်ရိုက်ဆွဲထုတ်မည်
         query = """
             SELECT 
                 f.Record_Date AS "နေ့စွဲ", 
@@ -791,17 +795,19 @@ def export_finance_excel():
                 COALESCE(l.Base_Type || ' (' || l.Project_Custom_Name || ')', f.Project_Location) AS "တည်နေရာ"
             FROM Finance_Ledger f
             LEFT JOIN Locations l ON f.Project_Location = l.Location_ID
-            ORDER BY f.Record_Date ASC, f.Ledger_ID ASC
         """
-        df = pd.read_sql_query(query, conn)
+        params = None
+        if filter_type in ['CRK', 'DPK', 'JV']:
+            query += " WHERE f.Voucher_Type = %s"
+            params = (filter_type,)
+            
+        query += " ORDER BY f.Record_Date ASC, f.Ledger_ID ASC"
         
-        # DataFrame ကို Excel ဖိုင်အဖြစ် Memory ပေါ်တွင် ဖန်တီးမည်
+        df = pd.read_sql_query(query, conn, params=params)
         output = BytesIO()
         with pd.ExcelWriter(output, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Finance_Report')
         output.seek(0)
-        
-        # ဖန်တီးထားသော Excel ဖိုင်ကို Download ချပေးမည်
         return send_file(output, download_name="Finance_Report.xlsx", as_attachment=True)
     except Exception as e:
         return f"Error exporting to Excel: {e}"
@@ -809,31 +815,36 @@ def export_finance_excel():
         conn.close()
 
 # ==========================================
-# Report: Finance စာရင်းအား PDF/Print ထုတ်ရန် မျက်နှာပြင်
+# Report: Finance စာရင်းအား PDF/Print ထုတ်ရန် (Filter ပြင်ဆင်ပြီး)
 # ==========================================
 @app.route('/print_finance')
 def print_finance():
     if 'user' not in session or session.get('role') not in ['Admin', 'Finance']: 
         return "Unauthorized Access", 403
 
+    filter_type = request.args.get('filter')
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        cur.execute("""
+        query = """
             SELECT 
                 f.Record_Date, f.Voucher_Type, f.Voucher_No, f.Description, 
                 f.Account_Head, f.Dr_Amount, f.Cr_Amount, 
                 COALESCE(l.Base_Type || ' (' || l.Project_Custom_Name || ')', f.Project_Location) AS Location_Name
             FROM Finance_Ledger f
             LEFT JOIN Locations l ON f.Project_Location = l.Location_ID
-            ORDER BY f.Record_Date ASC, f.Ledger_ID ASC
-        """)
+        """
+        params = []
+        if filter_type in ['CRK', 'DPK', 'JV']:
+            query += " WHERE f.Voucher_Type = %s"
+            params.append(filter_type)
+            
+        query += " ORDER BY f.Record_Date ASC, f.Ledger_ID ASC"
+        cur.execute(query, tuple(params))
         vouchers = cur.fetchall()
         
-        # စုစုပေါင်း ငွေဝင်/ငွေထွက် တွက်ချက်ခြင်း
         total_dr = sum(v[5] for v in vouchers)
         total_cr = sum(v[6] for v in vouchers)
-        
     except Exception as e:
         vouchers = []
         total_dr = total_cr = 0
@@ -841,7 +852,7 @@ def print_finance():
         cur.close()
         conn.close()
 
-    return render_template('print_finance.html', vouchers=vouchers, total_dr=total_dr, total_cr=total_cr)
+    return render_template('print_finance.html', vouchers=vouchers, total_dr=total_dr, total_cr=total_cr, current_filter=filter_type)
 
 # ==========================================
 # Purchase Orders (PO) စာရင်းပြသခြင်း

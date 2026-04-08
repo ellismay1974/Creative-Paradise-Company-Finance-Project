@@ -2,37 +2,39 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Expense (DPK)</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>body { background-color: #f8f9fc; padding: 40px; font-family: sans-serif; }</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>body { background-color: #f8f9fc; padding: 15px; font-family: sans-serif; }</style>
 </head>
 <body>
-<div class="container" style="max-width: 600px;">
-    <div class="card shadow-sm border-0 rounded-3 p-4 border-top border-warning border-4">
-        <h4 class="text-warning mb-4" style="text-shadow: 0px 0px 1px #000;"><i class="fas fa-file-invoice-dollar me-2"></i>အထွေထွေ အသုံးစရိတ် (Expense)</h4>
+<div class="container p-0" style="max-width: 600px;">
+    <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-2 border-top border-warning border-4">
+        <h5 class="text-warning text-dark mb-4 fw-bold"><i class="fas fa-money-bill-wave me-2"></i>အထွေထွေ အသုံးစရိတ် (Expense)</h5>
         <form action="/add_expense" method="POST">
             <div class="mb-3">
-                <label class="form-label fw-bold text-muted">အကြောင်းအရာ (Description)</label>
-                <input type="text" name="description" class="form-control" placeholder="ဥပမာ - ကားဆီဖိုး၊ မီးဖိုး၊ အလုပ်သမားလစာ" required>
+                <label class="form-label" style="font-size: 0.9rem;">အကြောင်းအရာ (Description)</label>
+                <input type="text" name="description" class="form-control" required>
             </div>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-muted">ငွေပမာဏ (Amount Ks)</label>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">ငွေပမာဏ (Amount Ks)</label>
                     <input type="number" name="amount" class="form-control" required>
                 </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label fw-bold text-muted">စရိတ်ခေါင်းစဉ် (Account Head)</label>
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">စရိတ်ခေါင်းစဉ်</label>
                     <select name="expense_head" class="form-select" required>
-                        <option value="General Expense">အထွေထွေစရိတ် (General Expense)</option>
-                        <option value="Salary Expense">လစာ (Salary)</option>
-                        <option value="Fuel Expense">စက်သုံးဆီ (Fuel)</option>
-                        <option value="Office Expense">ရုံးသုံးစရိတ် (Office Expense)</option>
-                        <option value="Transportation Expense">သယ်ယူပို့ဆောင်ရေးစရိတ် (Transportation)</option>
+                        <option value="General Expense">အထွေထွေစရိတ်</option>
+                        <option value="Salary Expense">လစာစရိတ်</option>
+                        <option value="Fuel Expense">ဆီဖိုး</option>
+                        <option value="Office Expense">ရုံးစရိတ်</option>
+                        <option value="Transportation Expense">ကားခ/သယ်ယူပို့ဆောင်ခ</option>
                     </select>
                 </div>
             </div>
             <div class="mb-4">
-                <label class="form-label fw-bold text-muted">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
+                <label class="form-label" style="font-size: 0.9rem;">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
                 <select name="location" class="form-select" required>
                     <option value="">-- ရွေးချယ်ပါ --</option>
                     {% for loc in locations %}
@@ -40,7 +42,7 @@
                     {% endfor %}
                 </select>
             </div>
-            <button type="submit" class="btn btn-warning w-100 fw-bold text-dark">စာရင်းသွင်းမည်</button>
+            <button type="submit" class="btn btn-warning text-dark w-100 fw-bold py-2"><i class="fas fa-save me-2"></i>စာရင်းသွင်းမည်</button>
             <a href="/finance" class="btn btn-outline-secondary w-100 mt-2">နောက်သို့</a>
         </form>
     </div>
