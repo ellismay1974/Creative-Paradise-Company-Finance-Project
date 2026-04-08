@@ -562,7 +562,6 @@ def requisition():
 
     return render_template('requisition.html', role=role, session=session, items=items)
 
-
 # ==========================================
 # GIN (ပစ္စည်းအထွက်) စာရင်းသွင်းခြင်း (Error Handling ပါဝင်သည်)
 # ==========================================
@@ -634,7 +633,7 @@ def add_gin():
 # ==========================================
 # Site-to-Site Transfer (ဆိုက်အချင်းချင်း ပစ္စည်းလွှဲပြောင်းခြင်း)
 # ==========================================
-@app.route('/transfer')                                 # <--- ဒီစာကြောင်းလေး အသစ်တိုးလိုက်ပါ
+@app.route('/transfer')
 @app.route('/add_transfer', methods=['GET', 'POST'])
 def add_transfer():
     if 'user' not in session: return redirect('/login')
@@ -900,7 +899,7 @@ def add_po():
         qty = request.form['qty']
         amount = request.form['amount']
         supplier = request.form['supplier']
-        target_location = request.form['location'] # <--- အသစ်ထည့်ထားသော အပိုင်း
+        target_location = request.form['location']
         
         po_no = "PO-" + datetime.now().strftime("%Y%m%d%H%M%S")
         created_by = session['user']
