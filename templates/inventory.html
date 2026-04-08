@@ -108,7 +108,7 @@
                             <tbody>
                                 {% for row in items %}
                                 <tr>
-                                    <td>{{ row[0].strftime('%Y-%m-%d') if row[0] else '' }}</td>
+                                    <td>{{ row[0] if row[0] else '' }}</td>
                                     <td>
                                         <span class="badge {% if row[1] == 'GRN' %}bg-success{% elif row[1] == 'GIN' %}bg-danger{% else %}bg-secondary{% endif %}">
                                             {{ row[1] }}
