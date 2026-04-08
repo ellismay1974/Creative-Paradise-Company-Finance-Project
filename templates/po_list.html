@@ -2,143 +2,169 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Purchase Orders - Creative Paradise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purchase Orders - Creative Paradise ERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; }
-        .sidebar { 
-            height: 100vh; 
-            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); 
-            color: white; 
-            padding-top: 25px; 
-            overflow-y: auto; /* ဤအပိုင်း အသစ်ထည့်ထားသည် */
-            padding-bottom: 20px; /* အောက်ခြေတွင် ကပ်မနေစေရန် */
-        }
-        .sidebar h5 { font-weight: 800; color: #fff; margin-bottom: 30px; }
-        .sidebar a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
-        .sidebar a:hover, .sidebar a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
-        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .custom-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 25px; }
-        .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 800; font-size: 0.75rem; text-transform: uppercase; }
+        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; overflow-x: hidden; }
+        .sidebar-custom { background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); color: white; }
+        .sidebar-custom h5 { font-weight: 800; color: #fff; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; padding-top: 25px; }
+        .sidebar-custom a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
+        .sidebar-custom a:hover, .sidebar-custom a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
+        .desktop-sidebar { height: 100vh; overflow-y: auto; padding-bottom: 20px; position: sticky; top: 0; }
+        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        .custom-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 20px; margin-bottom: 20px; overflow: hidden; }
+        .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/icon.png">
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar d-none d-md-block">
+
+<div class="offcanvas offcanvas-start sidebar-custom" tabindex="-1" id="mobileSidebar">
+  <div class="offcanvas-header pt-4">
+    <h5 class="offcanvas-title text-center w-100"><i class="fas fa-building me-2"></i>C. Paradise</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-0" id="mobile-nav">
+    <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+    {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+    {% if role in ['Admin', 'Finance'] %}<a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+    {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+    {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po" class="active"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
+    {% if role == 'Admin' %}
+        <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
+        <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+        <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
+    {% endif %}
+    <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
+  </div>
+</div>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <div class="col-md-2 sidebar-custom desktop-sidebar d-none d-md-block" id="desktop-nav">
             <h5 class="text-center"><i class="fas fa-building me-2"></i>C. Paradise</h5>
             <hr class="sidebar-divider mx-3 bg-light opacity-25">
-            
             <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-            
-            {% if role in ['Admin', 'Store Keeper'] %}
-            <a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory (GRN/GIN)</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Finance'] %}
-            <a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance Vouchers</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Site Engineer'] %}
-            <a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Site Requisitions</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}
-            <a href="/po" class="active"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>
-            {% endif %}
-            
+            {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+            {% if role in ['Admin', 'Finance'] %}<a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+            {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po" class="active"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
             {% if role == 'Admin' %}
             <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
-            <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ သတ်မှတ်ရန်</a>
-            <a href="/users"><i class="fas fa-users me-2"></i> အသုံးပြုသူများ (Users)</a>
+            <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+            <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
             {% endif %}
-            
             <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
         </div>
 
-        <div class="col-md-10 p-0">
-            <div class="top-nav d-flex justify-content-between align-items-center">
-                <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">Purchase Orders (PO)</h4>
-                <span class="text-muted">အသုံးပြုသူ: <strong class="text-primary">{{ session['user'] }}</strong> ({{ role }})</span>
+        <div class="col-12 col-md-10">
+            <div class="top-nav">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-primary d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"><i class="fas fa-bars"></i></button>
+                    <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">Purchase Orders</h4>
+                </div>
+                <div>
+                    <strong class="text-primary">{{ session['user'] }}</strong> 
+                    <span class="badge bg-secondary ms-1 d-none d-sm-inline">{{ role }}</span>
+                </div>
             </div>
 
-            <div class="p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 style="font-weight: 700; color: #4e73df;">ပစ္စည်းဝယ်ယူရေး အော်ဒါမှတ်တမ်းများ</h5>
-                    <div>
-                        <a href="/export_po_excel" class="btn btn-success btn-sm me-2"><i class="fas fa-file-excel me-1"></i> Excel</a>
-                        <a href="/print_po" target="_blank" class="btn btn-danger btn-sm me-3"><i class="fas fa-file-pdf me-1"></i> PDF</a>
-
-                        {% if role in ['Admin', 'Purchaser'] %}
-                        <a href="/add_po" class="btn btn-primary"><i class="fas fa-plus me-2"></i>PO အသစ်ဖွင့်မည်</a>
-                        {% endif %}
-                    </div>
-                </div>
-
+            <div class="px-3 px-md-4 pb-4">
                 <div class="custom-card">
-                    <table class="table table-hover mt-2 align-middle">
-                        <thead>
-                            <tr>
-                                <th>နေ့စွဲ</th>
-                                <th>PO No.</th>
-                                <th>ပစ္စည်းအမည်</th>
-                                <th>အရေအတွက်</th>
-                                <th>ခန့်မှန်းတန်ဖိုး</th>
-                                <th>Supplier</th>
-                                <th>တောင်းခံသူ</th>
-                                <th>Status</th>
-                                {% if role in ['Admin', 'Purchaser'] %}<th>လုပ်ဆောင်ချက်</th>{% endif %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in pos %}
-                            <tr>
-                                <td>{{ row[1].strftime('%Y-%m-%d') if row[1] else '' }}</td>
-                                <td><strong>{{ row[2] }}</strong></td>
-                                <td>{{ row[3] }}</td>
-                                <td>{{ row[4] }}</td>
-                                <td class="text-danger">{{ '{:,.0f}'.format(row[5]) }}</td>
-                                <td>{{ row[6] }}</td>
-                                <td><span class="badge bg-light text-dark border">{{ row[8] }}</span></td>
-                                <td>
-                                    {% if row[7] == 'Pending' %}
-                                        <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>စောင့်ဆိုင်းဆဲ</span>
-                                    {% elif row[7] == 'Approved' %}
-                                        <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>ခွင့်ပြုပြီး</span>
-                                    {% else %}
-                                        <span class="badge bg-info"><i class="fas fa-box me-1"></i>ရောက်ရှိ/သိမ်းဆည်းပြီး</span>
+                    
+                    <div class="d-flex flex-wrap gap-2 mb-4 justify-content-between align-items-center">
+                        <h5 class="text-primary mb-0 d-none d-lg-block" style="font-weight: 700;"><i class="fas fa-file-invoice me-2"></i>ဝယ်ယူရေး အော်ဒါမှတ်တမ်းများ</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/export_po_excel" class="btn btn-success"><i class="fas fa-file-excel me-1"></i> Excel</a>
+                            <a href="/print_po" target="_blank" class="btn btn-danger"><i class="fas fa-file-pdf me-1"></i> PDF</a>
+                            {% if role in ['Admin', 'Purchaser'] %}
+                            <a href="/add_po" class="btn btn-primary"><i class="fas fa-plus me-1"></i> PO အသစ်ဖွင့်မည်</a>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover mt-2 align-middle">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 100px;">နေ့စွဲ</th>
+                                    <th style="min-width: 150px;">PO No.</th>
+                                    <th style="min-width: 200px;">ပစ္စည်းအမည်</th>
+                                    <th style="min-width: 100px;">အရေအတွက်</th>
+                                    <th style="min-width: 150px;">ခန့်မှန်းတန်ဖိုး</th>
+                                    <th style="min-width: 150px;">Supplier</th>
+                                    <th style="min-width: 120px;">တောင်းခံသူ</th>
+                                    <th style="min-width: 150px;">Status</th>
+                                    {% if role in ['Admin', 'Purchaser'] %}<th style="min-width: 150px;">လုပ်ဆောင်ချက်</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in pos %}
+                                <tr>
+                                    <td>{{ row[1].strftime('%Y-%m-%d') if row[1] else '' }}</td>
+                                    <td><strong>{{ row[2] }}</strong></td>
+                                    <td>{{ row[3] }}</td>
+                                    <td>{{ row[4] }}</td>
+                                    <td class="text-danger">{{ '{:,.0f}'.format(row[5]) }}</td>
+                                    <td>{{ row[6] }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ row[8] }}</span></td>
+                                    <td>
+                                        {% if row[7] == 'Pending' %}
+                                            <span class="badge bg-warning text-dark"><i class="fas fa-clock me-1"></i>စောင့်ဆိုင်းဆဲ</span>
+                                        {% elif row[7] == 'Approved' %}
+                                            <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>ခွင့်ပြုပြီး</span>
+                                        {% else %}
+                                            <span class="badge bg-info"><i class="fas fa-box me-1"></i>သိမ်းဆည်းပြီး</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    {% if role in ['Admin', 'Purchaser'] %}
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            {% if role == 'Admin' and row[7] == 'Pending' %}
+                                            <a href="/approve_po/{{ row[0] }}" class="btn btn-sm btn-success" onclick="return confirm('ဤ PO အား ဝယ်ယူရန် ခွင့်ပြုပါသလား?')">Approve</a>
+                                            {% endif %}
+                                            
+                                            {% if role == 'Admin' or (role == 'Purchaser' and row[7] == 'Pending' and row[8] == session['user']) %}
+                                            <a href="/delete_po/{{ row[0] }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('ဤ PO အား ဖျက်ရန် သေချာပါသလား?')">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
                                     {% endif %}
-                                </td>
-                                
-                                {% if role in ['Admin', 'Purchaser'] %}
-                                <td>
-                                    <div class="d-flex gap-2">
-                                        {% if role == 'Admin' and row[7] == 'Pending' %}
-                                        <a href="/approve_po/{{ row[0] }}" class="btn btn-sm btn-success" onclick="return confirm('ဤ PO အား ဝယ်ယူရန် ခွင့်ပြုပါသလား?')">Approve</a>
-                                        {% endif %}
-                                        
-                                        {% if role == 'Admin' or (role == 'Purchaser' and row[7] == 'Pending' and row[8] == session['user']) %}
-                                        <a href="/delete_po/{{ row[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('ဤ PO အား ဖျက်ရန် သေချာပါသလား?')">
-                                            <i class="fas fa-trash-alt"></i> ဖျက်မည်
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </td>
-                                {% endif %}
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="9" class="text-center text-muted py-5">PO မှတ်တမ်း မရှိသေးပါ</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-5">
+                                        <i class="fas fa-folder-open fa-3x mb-3 text-light"></i><br>PO မှတ်တမ်း မရှိသေးပါ
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Menu များကို အလိုအလျောက် Active ဖြစ်စေရန်
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('#mobile-nav a, #desktop-nav a').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+</script>
 </body>
 </html>

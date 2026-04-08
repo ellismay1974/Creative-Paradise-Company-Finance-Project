@@ -2,155 +2,177 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Finance Ledger - Creative Paradise</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance - Creative Paradise ERP</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; }
-        .sidebar { 
-            height: 100vh; 
+        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; overflow-x: hidden; }
+        
+        /* Sidebar Styling */
+        .sidebar-custom { 
             background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); 
             color: white; 
-            padding-top: 25px; 
-            overflow-y: auto; /* ဤအပိုင်း အသစ်ထည့်ထားသည် */
-            padding-bottom: 20px; /* အောက်ခြေတွင် ကပ်မနေစေရန် */
         }
-        .sidebar h5 { font-weight: 800; color: #fff; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase;}
-        .sidebar a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
-        .sidebar a:hover, .sidebar a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
-        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
-        .custom-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 25px; }
-        .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 800; font-size: 0.8rem; text-transform: uppercase;}
-        .btn-custom { font-weight: 600; border-radius: 8px; padding: 8px 15px; }
+        .sidebar-custom h5 { font-weight: 800; color: #fff; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; padding-top: 25px; }
+        .sidebar-custom a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
+        .sidebar-custom a:hover, .sidebar-custom a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
+        
+        /* Desktop Sidebar */
+        .desktop-sidebar { height: 100vh; overflow-y: auto; padding-bottom: 20px; position: sticky; top: 0; }
+        
+        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
+        
+        /* Table Custom Styling */
+        .custom-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 20px; margin-bottom: 20px; }
+        .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 700; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        
+        /* Mobile Table Scrolling */
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        
+        /* Badges */
+        .badge.bg-crk { background-color: #1cc88a; } /* Income Color */
+        .badge.bg-dpk { background-color: #e74a3b; } /* Expense Color */
+        .badge.bg-jv { background-color: #f6c23e; } /* JV Color */
     </style>
+
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/icon.png">
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar d-none d-md-block">
+
+<div class="offcanvas offcanvas-start sidebar-custom" tabindex="-1" id="mobileSidebar">
+  <div class="offcanvas-header pt-4">
+    <h5 class="offcanvas-title text-center w-100"><i class="fas fa-building me-2"></i>C. Paradise</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-0">
+    <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+    {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+    {% if role in ['Admin', 'Finance'] %}<a href="/finance" class="active"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+    {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+    {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
+    {% if role == 'Admin' %}
+        <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
+        <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+        <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
+    {% endif %}
+    <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
+  </div>
+</div>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <div class="col-md-2 sidebar-custom desktop-sidebar d-none d-md-block">
             <h5 class="text-center"><i class="fas fa-building me-2"></i>C. Paradise</h5>
             <hr class="sidebar-divider mx-3 bg-light opacity-25">
             
             <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-            
-            {% if role in ['Admin', 'Store Keeper'] %}
-            <a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory (GRN/GIN)</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Finance'] %}
-            <a href="/finance" class="active"><i class="fas fa-file-invoice-dollar me-2"></i> Finance Vouchers</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Site Engineer'] %}
-            <a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Site Requisitions</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}
-            <a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>
-            {% endif %}
+            {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+            {% if role in ['Admin', 'Finance'] %}<a href="/finance" class="active"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+            {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
             
             {% if role == 'Admin' %}
             <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
-            <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ သတ်မှတ်ရန်</a>
-            <a href="/users"><i class="fas fa-users me-2"></i> အသုံးပြုသူများ (Users)</a>
+            <a href="/locations"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+            <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
             {% endif %}
             
             <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
         </div>
-        
-        <div class="col-md-10 p-0" style="height: 100vh; overflow-y: auto;">
-            <div class="top-nav d-flex justify-content-between align-items-center">
-                <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">Finance Vouchers</h4>
+
+        <div class="col-12 col-md-10">
+            <div class="top-nav">
                 <div class="d-flex align-items-center">
-                    <span class="me-3 text-muted">အသုံးပြုသူ: <strong class="text-primary">{{ session['user'] }}</strong></span>
+                    <button class="btn btn-outline-primary d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">Finance Vouchers</h4>
+                </div>
+                <div>
+                    <strong class="text-primary">{{ session['user'] }}</strong> 
+                    <span class="badge bg-secondary ms-1 d-none d-sm-inline">{{ role }}</span>
                 </div>
             </div>
 
-            <div class="p-4">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h5 style="font-weight: 700; color: #4e73df;">ငွေစာရင်း မှတ်တမ်း (Finance Ledger)</h5>
+            <div class="px-3 px-md-4 pb-4">
+                
+                <div class="custom-card">
                     
-                    <div>
-                        <a href="/add_income" class="btn btn-primary btn-custom me-2"><i class="fas fa-plus-circle me-1"></i> ဝင်ငွေပြေစာ (CRK)</a>
-                        <a href="/add_expense" class="btn btn-warning btn-custom text-dark me-3"><i class="fas fa-minus-circle me-1"></i> အသုံးစရိတ် (DPK)</a>
-                        
-                        <a href="/export_finance_excel" class="btn btn-success btn-custom me-2" title="Excel သို့ ပြောင်းမည်">
-                            <i class="fas fa-file-excel me-1"></i> Excel
-                        </a>
-                        <a href="/print_finance" target="_blank" class="btn btn-danger btn-custom me-3" title="PDF ထုတ်မည် (Print)">
-                            <i class="fas fa-file-pdf me-1"></i> PDF
-                        </a>
-                        
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-dark font-weight-bold" onclick="filterTable('All')">All</button>
-                            <button type="button" class="btn btn-outline-primary" onclick="filterTable('CRK')">CRK</button>
-                            <button type="button" class="btn btn-outline-warning text-dark" onclick="filterTable('DPK')">DPK</button>
-                            <button type="button" class="btn btn-outline-secondary" onclick="filterTable('JV')">JV</button>
+                    <div class="d-flex flex-wrap gap-2 mb-4 justify-content-between align-items-center">
+                        <h5 class="text-primary mb-0 d-none d-lg-block"><i class="fas fa-list-alt me-2"></i>ငွေစာရင်း မှတ်တမ်း (Finance Ledger)</h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="/add_income" class="btn btn-primary"><i class="fas fa-plus-circle me-1"></i> ဝင်ငွေ (CRK)</a>
+                            <a href="/add_expense" class="btn btn-warning"><i class="fas fa-minus-circle me-1"></i> အသုံးစရိတ် (DPK)</a>
+                            
+                            <div class="btn-group">
+                                <a href="/finance" class="btn btn-outline-secondary {% if request.args.get('filter') not in ['CRK', 'DPK', 'JV'] %}active{% endif %}">All</a>
+                                <a href="/finance?filter=CRK" class="btn btn-outline-secondary {% if request.args.get('filter') == 'CRK' %}active{% endif %}">CRK</a>
+                                <a href="/finance?filter=DPK" class="btn btn-outline-secondary {% if request.args.get('filter') == 'DPK' %}active{% endif %}">DPK</a>
+                                <a href="/finance?filter=JV" class="btn btn-outline-secondary {% if request.args.get('filter') == 'JV' %}active{% endif %}">JV</a>
+                            </div>
+
+                            <a href="/export_excel?filter={{ request.args.get('filter', '') }}" class="btn btn-success"><i class="fas fa-file-excel me-1"></i> Excel</a>
+                            <a href="/print_finance?filter={{ request.args.get('filter', '') }}" target="_blank" class="btn btn-danger"><i class="fas fa-file-pdf me-1"></i> PDF</a>
                         </div>
                     </div>
-                </div>
 
-                <div class="custom-card">
-                    <table class="table table-hover align-middle mt-2">
-                        <thead>
-                            <tr>
-                                <th>နေ့စွဲ</th>
-                                <th>Vr Type</th>
-                                <th>Voucher No.</th>
-                                <th>အကြောင်းအရာ</th>
-                                <th>Account Head</th>
-                                <th class="text-end">ငွေထွက် (Dr)</th>
-                                <th class="text-end">ငွေဝင် (Cr)</th>
-                                <th>တည်နေရာ</th>
-                                {% if role == 'Admin' %}<th>Action</th>{% endif %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in vouchers %}
-                            <tr>
-                                <td>{{ row[1].strftime('%Y-%m-%d') if row[1] else '' }}</td>
-                                <td><span class="badge bg-secondary">{{ row[2] }}</span></td>
-                                <td><strong>{{ row[3] }}</strong></td>
-                                <td>{{ row[4] }}</td>
-                                <td class="text-primary fw-bold">{{ row[5] }}</td>
-                                <td class="text-end text-danger fw-bold">{{ '{:,.0f}'.format(row[6]) if row[6] > 0 else '-' }}</td>
-                                <td class="text-end text-success fw-bold">{{ '{:,.0f}'.format(row[7]) if row[7] > 0 else '-' }}</td>
-                                <td>{{ row[9] }}</td>
-                                {% if role == 'Admin' %}
-                                <td>
-                                    <a href="/delete_finance/{{ row[0] }}" class="btn btn-sm btn-danger" onclick="return confirm('ဤမှတ်တမ်းအား ဖျက်ရန် သေချာပါသလား?')"><i class="fas fa-trash-alt"></i></a>
-                                </td>
-                                {% endif %}
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="9" class="text-center text-muted py-5">ငွေစာရင်း မှတ်တမ်း မရှိသေးပါ</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mt-2">
+                            <thead>
+                                <tr>
+                                    <th style="min-width: 100px;">နေ့စွဲ</th>
+                                    <th>Vr Type</th>
+                                    <th style="min-width: 150px;">Voucher No.</th>
+                                    <th style="min-width: 200px;">အကြောင်းအရာ</th>
+                                    <th style="min-width: 150px;">Account Head</th>
+                                    <th class="text-end" style="min-width: 120px;">ငွေထွက် (Dr)</th>
+                                    <th class="text-end" style="min-width: 120px;">ငွေဝင် (Cr)</th>
+                                    <th style="min-width: 150px;">တည်နေရာ</th>
+                                    {% if role == 'Admin' %}<th>Action</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in vouchers %}
+                                <tr>
+                                    <td>{{ row[1].strftime('%Y-%m-%d') if row[1] else '' }}</td>
+                                    <td>
+                                        <span class="badge {% if row[2] == 'CRK' %}bg-crk{% elif row[2] == 'DPK' %}bg-dpk{% else %}bg-jv{% endif %}">
+                                            {{ row[2] }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ row[3] }}</strong></td>
+                                    <td>{{ row[4] }}</td>
+                                    <td class="text-primary fw-bold">{{ row[5] }}</td>
+                                    <td class="text-end text-danger fw-bold">{{ '{:,.0f}'.format(row[6]) if row[6] > 0 else '-' }}</td>
+                                    <td class="text-end text-success fw-bold">{{ '{:,.0f}'.format(row[7]) if row[7] > 0 else '-' }}</td>
+                                    <td>{{ row[9] }}</td>
+                                    {% if role == 'Admin' %}
+                                    <td>
+                                        <a href="/delete_finance/{{ row[0] }}" class="btn btn-sm btn-outline-danger" onclick="return confirm('ဤမှတ်တမ်းအား ဖျက်ရန် သေချာပါသလား?')"><i class="fas fa-trash-alt"></i></a>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="9" class="text-center text-muted py-5">
+                                        <i class="fas fa-folder-open fa-3x mb-3 text-light"></i><br>
+                                        ငွေစာရင်း မှတ်တမ်း မရှိသေးပါ
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> </div>
             </div>
         </div>
     </div>
 </div>
 
-<script>
-    function filterTable(type) {
-        const rows = document.querySelectorAll('tbody tr');
-        rows.forEach(row => {
-            // 'ငွေစာရင်း မှတ်တမ်း မရှိသေးပါ' စာကြောင်းကို ကျော်မည်
-            if (row.cells.length < 2) return; 
-            
-            const vType = row.cells[1].innerText;
-            if (type === 'All' || vType.includes(type)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    }
-</script>
 </body>
 </html>

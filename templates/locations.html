@@ -2,108 +2,145 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manage Locations - Creative Paradise</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; }
-        .sidebar { 
-            height: 100vh; 
-            background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); 
-            color: white; 
-            padding-top: 25px; 
-            overflow-y: auto; /* ဤအပိုင်း အသစ်ထည့်ထားသည် */
-            padding-bottom: 20px; /* အောက်ခြေတွင် ကပ်မနေစေရန် */
-        }
-        .sidebar h5 { font-weight: 800; color: #fff; margin-bottom: 30px; }
-        .sidebar a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
-        .sidebar a:hover, .sidebar a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
-        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fc; color: #5a5c69; overflow-x: hidden; }
+        .sidebar-custom { background: linear-gradient(180deg, #4e73df 10%, #224abe 100%); color: white; }
+        .sidebar-custom h5 { font-weight: 800; color: #fff; margin-bottom: 30px; letter-spacing: 1px; text-transform: uppercase; padding-top: 25px; }
+        .sidebar-custom a { color: rgba(255,255,255,0.8); text-decoration: none; padding: 15px 20px; display: block; font-weight: 600; transition: 0.3s; border-radius: 0 30px 30px 0; margin-right: 20px; margin-bottom: 5px; }
+        .sidebar-custom a:hover, .sidebar-custom a.active { background-color: rgba(255,255,255,0.15); color: #fff; }
+        .desktop-sidebar { height: 100vh; overflow-y: auto; padding-bottom: 20px; position: sticky; top: 0; }
+        .top-nav { background-color: #fff; padding: 15px 30px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; }
         .custom-card { background: #fff; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e3e6f0; padding: 25px; }
+        .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; }
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
+    <link rel="manifest" href="/static/manifest.json">
+    <link rel="icon" href="/static/icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="/static/icon.png">
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-md-2 sidebar d-none d-md-block">
+
+<div class="offcanvas offcanvas-start sidebar-custom" tabindex="-1" id="mobileSidebar">
+  <div class="offcanvas-header pt-4">
+    <h5 class="offcanvas-title text-center w-100"><i class="fas fa-building me-2"></i>C. Paradise</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-0" id="mobile-nav">
+    <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
+    {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+    {% if role in ['Admin', 'Finance'] %}<a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+    {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+    {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
+    {% if role == 'Admin' %}
+        <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
+        <a href="/locations" class="active"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+        <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
+    {% endif %}
+    <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
+  </div>
+</div>
+
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <div class="col-md-2 sidebar-custom desktop-sidebar d-none d-md-block" id="desktop-nav">
             <h5 class="text-center"><i class="fas fa-building me-2"></i>C. Paradise</h5>
             <hr class="sidebar-divider mx-3 bg-light opacity-25">
-            
             <a href="/"><i class="fas fa-tachometer-alt me-2"></i> Dashboard</a>
-            
-            {% if role in ['Admin', 'Store Keeper'] %}
-            <a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory (GRN/GIN)</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Finance'] %}
-            <a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance Vouchers</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Site Engineer'] %}
-            <a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Site Requisitions</a>
-            {% endif %}
-            
-            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}
-            <a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>
-            {% endif %}
-            
+            {% if role in ['Admin', 'Store Keeper'] %}<a href="/inventory"><i class="fas fa-box-open me-2"></i> Inventory</a>{% endif %}
+            {% if role in ['Admin', 'Finance'] %}<a href="/finance"><i class="fas fa-file-invoice-dollar me-2"></i> Finance</a>{% endif %}
+            {% if role in ['Admin', 'Site Engineer'] %}<a href="/requisition"><i class="fas fa-hard-hat me-2"></i> Requisitions</a>{% endif %}
+            {% if role in ['Admin', 'Purchaser', 'Store Keeper'] %}<a href="/po"><i class="fas fa-shopping-cart me-2"></i> Purchase Orders</a>{% endif %}
             {% if role == 'Admin' %}
             <hr class="sidebar-divider mx-3 bg-light opacity-25 mt-4">
-            <a href="/locations" class="active"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ သတ်မှတ်ရန်</a>
-            <a href="/users"><i class="fas fa-users me-2"></i> အသုံးပြုသူများ (Users)</a>
+            <a href="/locations" class="active"><i class="fas fa-cogs me-2"></i> ဆိုက်နေရာ</a>
+            <a href="/users"><i class="fas fa-users me-2"></i> Users</a>
             {% endif %}
-            
             <a href="/logout" class="text-white-50 mt-3"><i class="fas fa-sign-out-alt me-2"></i> ထွက်မည်</a>
         </div>
 
-        <div class="col-md-10 p-0">
-            <div class="top-nav d-flex justify-content-between align-items-center">
-                <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">တည်နေရာ / ဆိုက်အမည် သတ်မှတ်ခြင်း</h4>
+        <div class="col-12 col-md-10">
+            <div class="top-nav">
+                <div class="d-flex align-items-center">
+                    <button class="btn btn-outline-primary d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar"><i class="fas fa-bars"></i></button>
+                    <h4 class="m-0 font-weight-bold text-dark" style="font-weight: 700;">တည်နေရာ သတ်မှတ်ခြင်း</h4>
+                </div>
+                <div>
+                    <strong class="text-primary">{{ session['user'] }}</strong> 
+                    <span class="badge bg-secondary ms-1 d-none d-sm-inline">{{ role }}</span>
+                </div>
             </div>
 
-            <div class="p-4">
-                <div class="alert alert-info border-0 shadow-sm">
-                    <div class="custom-card mt-3 mb-4" style="max-width: 800px; border-left: 4px solid #1cc88a;">
+            <div class="px-3 px-md-4 pb-4">
+                
+                <div class="custom-card mb-4" style="border-left: 4px solid #1cc88a;">
                     <h6 class="text-success fw-bold mb-3"><i class="fas fa-plus-circle me-2"></i>ဆိုက်တည်နေရာ အသစ်ထပ်ထည့်ရန်</h6>
-                    <form action="/add_location" method="POST" class="d-flex gap-3">
-                        <input type="text" name="loc_id" class="form-control" placeholder="ID (ဥပမာ: LOC-005)" required style="width: 150px;">
-                        <input type="text" name="base_type" class="form-control" placeholder="အမျိုးအစား (ဥပမာ: Site C)" required style="width: 180px;">
-                        <input type="text" name="custom_name" class="form-control" placeholder="တည်နေရာအမည် (ဥပမာ: မန္တလေးဆိုက်)" required>
-                        <button type="submit" class="btn btn-success text-nowrap"><i class="fas fa-plus me-2"></i>ထည့်မည်</button>
+                    <form action="/add_location" method="POST" class="row g-2 align-items-center">
+                        <div class="col-12 col-md-3">
+                            <input type="text" name="loc_id" class="form-control" placeholder="ID (ဥပမာ: LOC-005)" required>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="text" name="base_type" class="form-control" placeholder="အမျိုးအစား (ဥပမာ: Site C)" required>
+                        </div>
+                        <div class="col-12 col-md-4">
+                            <input type="text" name="custom_name" class="form-control" placeholder="တည်နေရာအမည် (ဥပမာ: မန္တလေးဆိုက်)" required>
+                        </div>
+                        <div class="col-12 col-md-2">
+                            <button type="submit" class="btn btn-success w-100"><i class="fas fa-plus me-2"></i>ထည့်မည်</button>
+                        </div>
                     </form>
                 </div>
+
+                <div class="alert alert-info border-0 shadow-sm">
                     <i class="fas fa-info-circle me-2"></i> ပရောဂျက်တစ်ခု ပြီးဆုံး၍ ဆိုက်အသစ် ပြောင်းရွှေ့ပါက အောက်ပါ ဇယားတွင် တည်နေရာအမည်ကို ကိုယ်တိုင် ပြောင်းလဲ သတ်မှတ်နိုင်ပါသည်။
                 </div>
 
-                <div class="custom-card mt-3" style="max-width: 800px;">
+                <div class="custom-card mt-3">
                     <form action="/locations" method="POST">
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th width="30%">ဆိုက် အမှတ်အသား</th>
-                                    <th>တည်နေရာ အမည်အစစ် (လက်ရှိ)</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for loc in locations %}
-                                <tr>
-                                    <td class="fw-bold text-primary">{{ loc[1] }}</td>
-                                    <td>
-                                        <input type="text" name="loc_{{ loc[0] }}" class="form-control" value="{{ loc[2] }}" placeholder="ဥပမာ - ရန်ကုန်ပရောဂျက်အသစ်">
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="min-width: 150px;">ဆိုက် အမှတ်အသား</th>
+                                        <th style="min-width: 250px;">တည်နေရာ အမည်အစစ် (လက်ရှိ)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for loc in locations %}
+                                    <tr>
+                                        <td class="fw-bold text-primary">{{ loc[1] }}</td>
+                                        <td>
+                                            <input type="text" name="loc_{{ loc[0] }}" class="form-control" value="{{ loc[2] }}" placeholder="ဥပမာ - ရန်ကုန်ပရောဂျက်အသစ်">
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                         <div class="text-end mt-3">
                             <button type="submit" class="btn btn-primary px-4"><i class="fas fa-save me-2"></i>အမည်များ သိမ်းဆည်းမည်</button>
                         </div>
                     </form>
                 </div>
+
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Menu များကို အလိုအလျောက် Active ဖြစ်စေရန်
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('#mobile-nav a, #desktop-nav a').forEach(link => {
+        if (link.getAttribute('href') === currentPath) {
+            link.classList.add('active');
+        }
+    });
+</script>
 </body>
 </html>
