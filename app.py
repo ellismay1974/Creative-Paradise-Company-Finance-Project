@@ -5,11 +5,11 @@ from datetime import datetime
 import pandas as pd
 from io import BytesIO
 import warnings
-
-warnings.filterwarnings('ignore', category=UserWarning)
 from dotenv import load_dotenv
 
-# .env ဖိုင်ထဲက Data များကို ဆွဲယူမည်
+warnings.filterwarnings('ignore', category=UserWarning)
+
+# Load environment variables
 load_dotenv()
 
 app = Flask(__name__)
@@ -23,7 +23,7 @@ def get_db_connection():
     return psycopg2.connect(DB_URI)
 
 # ==========================================
-# အစဉ်လိုက် Form/Voucher နံပါတ်များ ဖန်တီးပေးသော Function
+# Serial Number Generator
 # ==========================================
 def generate_serial(prefix, table_name, column_name, padding=3):
     conn = get_db_connection()
@@ -37,7 +37,8 @@ def generate_serial(prefix, table_name, column_name, padding=3):
             try:
                 last_num = int(result[0].split('-')[1])
                 new_num = last_num + 1
-            except:
+            except Exception as e:
+                print("Error parsing serial:", e)
                 new_num = 1
         else:
             new_num = 1
@@ -51,7 +52,7 @@ def generate_serial(prefix, table_name, column_name, padding=3):
         conn.close()
 
 # ==========================================
-# ၁။ Login နှင့် User Management
+# Login & Authentication
 # ==========================================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -110,32 +111,48 @@ def manage_users():
     return render_template('users.html', role=session.get('role'), session=session, user_list=user_list)
 
 # ==========================================
-# ၂။ Dashboard (ပင်မ မျက်နှာပြင်)
+# Dashboard
 # ==========================================
 @app.route('/')
 def dashboard():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
         
     role = session.get('role')
     conn = get_db_connection()
     cur = conn.cursor()
     
+    total_income = 0
+    total_expense = 0
+    stock_balance = 0
+    pending_po = 0
+    stock_labels = []
+    stock_values = []
+    
     try:
         cur.execute("SELECT COALESCE(SUM(Cr_Amount), 0) FROM Finance_Ledger WHERE Account_Head = 'Sales / Income'")
-        total_income = cur.fetchone()[0]
+        income_result = cur.fetchone()
+        if income_result:
+            total_income = income_result[0]
 
         cur.execute("""
             SELECT COALESCE(SUM(Dr_Amount), 0) 
             FROM Finance_Ledger 
             WHERE Account_Head IN ('Site Expense (WIP)', 'General Expense', 'Salary Expense', 'Fuel Expense', 'Office Expense', 'Transportation Expense')
         """)
-        total_expense = cur.fetchone()[0]
+        expense_result = cur.fetchone()
+        if expense_result:
+            total_expense = expense_result[0]
 
         cur.execute("SELECT COALESCE(SUM(Qty_In), 0) - COALESCE(SUM(Qty_Out), 0) FROM Inventory_Ledger")
-        stock_balance = cur.fetchone()[0]
+        balance_result = cur.fetchone()
+        if balance_result:
+            stock_balance = balance_result[0]
 
         cur.execute("SELECT COUNT(*) FROM Purchase_Orders WHERE Status = 'Pending'")
-        pending_po = cur.fetchone()[0]
+        po_result = cur.fetchone()
+        if po_result:
+            pending_po = po_result[0]
 
         cur.execute("""
             SELECT Item_Name, SUM(Qty_In) - SUM(Qty_Out) as Balance
@@ -149,9 +166,6 @@ def dashboard():
         stock_values = [int(row[1]) for row in stock_data]
     except Exception as e:
         print("Dashboard Error:", e)
-        total_income = total_expense = stock_balance = pending_po = 0
-        stock_labels = []
-        stock_values = []
     finally:
         cur.close()
         conn.close()
@@ -162,16 +176,19 @@ def dashboard():
                            stock_labels=stock_labels, stock_values=stock_values)
 
 # ==========================================
-# ၃။ Inventory (ပစ္စည်းစာရင်း)
+# Inventory Logic
 # ==========================================
 @app.route('/inventory')
 def inventory():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
-    if role not in ['Admin', 'Store Keeper']: return "Unauthorized Access", 403
+    if role not in ['Admin', 'Store Keeper']:
+        return "Unauthorized Access", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
+    items = []
     try:
         cur.execute("""
             SELECT 
@@ -186,7 +203,6 @@ def inventory():
         items = cur.fetchall()
     except Exception as e:
         print("Inventory Error:", e)
-        items = []
     finally:
         cur.close()
         conn.close()
@@ -194,17 +210,20 @@ def inventory():
     return render_template('inventory.html', role=role, session=session, items=items)
 
 # ==========================================
-# ၄။ Finance Vouchers (ငွေစာရင်း)
+# Finance Logic
 # ==========================================
 @app.route('/finance')
 def finance():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
-    if role not in ['Admin', 'Finance']: return "Unauthorized Access", 403
+    if role not in ['Admin', 'Finance']:
+        return "Unauthorized Access", 403
 
     filter_type = request.args.get('filter')
     conn = get_db_connection()
     cur = conn.cursor()
+    vouchers = []
     try:
         base_query = """
             SELECT 
@@ -225,7 +244,6 @@ def finance():
         vouchers = cur.fetchall()
     except Exception as e:
         print("Finance Error:", e)
-        vouchers = []
     finally:
         cur.close()
         conn.close()
@@ -234,8 +252,10 @@ def finance():
 
 @app.route('/add_income', methods=['GET', 'POST'])
 def add_income():
-    if 'user' not in session: return redirect('/login')
-    if session.get('role') not in ['Admin', 'Finance']: return "Unauthorized", 403
+    if 'user' not in session:
+        return redirect('/login')
+    if session.get('role') not in ['Admin', 'Finance']:
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -247,7 +267,6 @@ def add_income():
             location = request.form['location']
             receipt_type = request.form['receipt_type']
             
-            # CRK-0001 ဖြင့် ထွက်မည် (ဂဏန်း ၄ လုံး)
             voucher_no = generate_serial("CRK", "Finance_Ledger", "Voucher_No", 4)
             
             if receipt_type == 'Cash':
@@ -280,8 +299,10 @@ def add_income():
 
 @app.route('/add_expense', methods=['GET', 'POST'])
 def add_expense():
-    if 'user' not in session: return redirect('/login')
-    if session.get('role') not in ['Admin', 'Finance']: return "Unauthorized", 403
+    if 'user' not in session:
+        return redirect('/login')
+    if session.get('role') not in ['Admin', 'Finance']:
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -293,7 +314,6 @@ def add_expense():
             location = request.form['location']
             expense_head = request.form['expense_head']
             
-            # DPC-0001 ဖြင့် ထွက်မည် (ဂဏန်း ၄ လုံး)
             voucher_no = generate_serial("DPC", "Finance_Ledger", "Voucher_No", 4)
             
             cur.execute("""
@@ -319,8 +339,10 @@ def add_expense():
 
 @app.route('/delete_finance/<int:id>')
 def delete_finance(id):
-    if 'user' not in session: return redirect('/login')
-    if session.get('role') != 'Admin': return "Unauthorized", 403
+    if 'user' not in session:
+        return redirect('/login')
+    if session.get('role') != 'Admin':
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -328,6 +350,7 @@ def delete_finance(id):
         cur.execute("DELETE FROM Finance_Ledger WHERE Ledger_ID = %s", (id,))
         conn.commit()
     except Exception as e:
+        print("Delete Finance Error:", e)
         conn.rollback()
     finally:
         cur.close()
@@ -335,11 +358,12 @@ def delete_finance(id):
     return redirect('/finance')
 
 # ==========================================
-# ၅။ GRN (ပစ္စည်းအဝင်) နှင့် GIN (ပစ္စည်းအထွက်) 
+# Inventory Transactions (GRN, GIN, TRN)
 # ==========================================
 @app.route('/add_grn', methods=['GET', 'POST'])
 def add_grn():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     
     conn = get_db_connection()
     cur = conn.cursor()
@@ -353,7 +377,6 @@ def add_grn():
             payment_type = request.form['payment_type']
             location = request.form['location']
             
-            # GRN-001 ဖြင့် ထွက်မည် (ဂဏန်း ၃ လုံး)
             form_no = generate_serial("GRN", "Inventory_Ledger", "Form_No", 3) 
             ref_no = f"PO-{po_id}" if po_id else "Direct"
             
@@ -363,7 +386,6 @@ def add_grn():
             """, (form_no, ref_no, item_name, qty, location))
             
             if payment_type == 'Cash':
-                # Cash Payment ဆိုလျှင် DPC-0001
                 voucher_no = generate_serial("DPC", "Finance_Ledger", "Voucher_No", 4)
                 cur.execute("""
                     INSERT INTO Finance_Ledger (Voucher_Type, Voucher_No, Description, Account_Head, Dr_Amount, Cr_Amount, Project_Location)
@@ -372,7 +394,6 @@ def add_grn():
                 """, (voucher_no, f"{item_name} ဝယ်ယူမှု (GRN)", amount, location,
                       voucher_no, f"{item_name} ဝယ်ယူမှု (GRN)", amount, location))
             else:
-                # Credit Payment ဆိုလျှင် JV-0001
                 voucher_no = generate_serial("JV", "Finance_Ledger", "Voucher_No", 4)
                 cur.execute("""
                     INSERT INTO Finance_Ledger (Voucher_Type, Voucher_No, Description, Account_Head, Dr_Amount, Cr_Amount, Project_Location)
@@ -404,11 +425,13 @@ def add_grn():
 
 @app.route('/requisition')
 def requisition():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
 
     conn = get_db_connection()
     cur = conn.cursor()
+    items = []
     try:
         cur.execute("""
             SELECT 
@@ -423,7 +446,7 @@ def requisition():
         """)
         items = cur.fetchall()
     except Exception as e:
-        items = []
+        print("Requisition Error:", e)
     finally:
         cur.close()
         conn.close()
@@ -432,7 +455,8 @@ def requisition():
 
 @app.route('/add_gin', methods=['GET', 'POST'])
 def add_gin():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -444,12 +468,12 @@ def add_gin():
             location = request.form['location'] 
             
             cur.execute("SELECT COALESCE(SUM(Qty_In), 0) - COALESCE(SUM(Qty_Out), 0) FROM Inventory_Ledger WHERE Item_Name = %s", (item_name,))
-            current_stock = cur.fetchone()[0]
+            stock_result = cur.fetchone()
+            current_stock = stock_result[0] if stock_result else 0
 
-            if current_stock is None or qty > current_stock:
+            if current_stock is None or qty > float(current_stock):
                 return f"<h2 style='color: red; text-align: center; margin-top: 50px;'>Error: {item_name} အတွက် ပစ္စည်းလက်ကျန် မလောက်ပါ။</h2>", 400
 
-            # GIN-001 ဖြင့် ထွက်မည် (ဂဏန်း ၃ လုံး)
             form_no = generate_serial("GIN", "Inventory_Ledger", "Form_No", 3)
             
             cur.execute("""
@@ -457,7 +481,6 @@ def add_gin():
                 VALUES ('GIN', %s, 'ITEM-NEW', %s, %s, %s)
             """, (form_no, item_name, qty, location))
             
-            # GIN အတွက် Journal Voucher ထွက်မည် JV-0001
             voucher_no = generate_serial("JV", "Finance_Ledger", "Voucher_No", 4)
             cur.execute("""
                 INSERT INTO Finance_Ledger (Voucher_Type, Voucher_No, Description, Account_Head, Dr_Amount, Cr_Amount, Project_Location)
@@ -481,13 +504,11 @@ def add_gin():
     conn.close()
     return render_template('gin_form.html', locations=locations)
 
-# ==========================================
-# ၆။ ဆိုက်အချင်းချင်း ပစ္စည်းလွှဲပြောင်းခြင်း (Transfer)
-# ==========================================
 @app.route('/transfer', methods=['GET'])
 @app.route('/add_transfer', methods=['GET', 'POST'])
 def add_transfer():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     cur = conn.cursor()
 
@@ -502,7 +523,6 @@ def add_transfer():
             if from_location == to_location:
                 return "<h3 style='color:red; text-align:center; margin-top:50px;'>Error: ပေးပို့မည့်ဆိုက်နှင့် လက်ခံမည့်ဆိုက် တူညီနေပါသည်။</h3>", 400
 
-            # TRN-001 ဖြင့် ထွက်မည် (ဂဏန်း ၃ လုံး)
             form_no = generate_serial("TRN", "Inventory_Ledger", "Form_No", 3) 
             
             cur.execute("""
@@ -515,7 +535,6 @@ def add_transfer():
                 VALUES ('Transfer In', %s, 'ITEM-NEW', %s, %s, %s, %s)
             """, (form_no, item_name, qty, from_location, to_location))
 
-            # JV-0001
             voucher_no = generate_serial("JV", "Finance_Ledger", "Voucher_No", 4)
             cur.execute("""
                 INSERT INTO Finance_Ledger (Voucher_Type, Voucher_No, Description, Account_Head, Dr_Amount, Cr_Amount, Project_Location)
@@ -540,13 +559,15 @@ def add_transfer():
     return render_template('transfer_form.html', locations=locations)
 
 # ==========================================
-# ၇။ Location စီမံခန့်ခွဲခြင်း
+# Locations
 # ==========================================
 @app.route('/locations', methods=['GET', 'POST'])
 def manage_locations():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
-    if role != 'Admin': return "Unauthorized", 403
+    if role != 'Admin':
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -561,6 +582,7 @@ def manage_locations():
             return redirect('/locations')
         except Exception as e:
             conn.rollback()
+            print("Location Update Error:", e)
         finally:
             cur.close()
             conn.close()
@@ -573,7 +595,8 @@ def manage_locations():
 
 @app.route('/add_location', methods=['POST'])
 def add_location():
-    if session.get('role') != 'Admin': return "Unauthorized", 403
+    if session.get('role') != 'Admin':
+        return "Unauthorized", 403
     conn = get_db_connection()
     cur = conn.cursor()
     try:
@@ -584,17 +607,19 @@ def add_location():
         conn.commit()
     except Exception as e:
         conn.rollback()
+        print("Add Location Error:", e)
     finally:
         cur.close()
         conn.close()
     return redirect('/locations')
 
 # ==========================================
-# ၈။ Report များ (Excel / PDF)
+# Reporting
 # ==========================================
 @app.route('/export_finance_excel')
 def export_finance_excel():
-    if 'user' not in session or session.get('role') not in ['Admin', 'Finance']: return "Unauthorized", 403
+    if 'user' not in session or session.get('role') not in ['Admin', 'Finance']:
+        return "Unauthorized", 403
     filter_type = request.args.get('filter')
     conn = get_db_connection()
     try:
@@ -616,15 +641,21 @@ def export_finance_excel():
             df.to_excel(writer, index=False, sheet_name='Finance_Report')
         output.seek(0)
         return send_file(output, download_name="Finance_Report.xlsx", as_attachment=True)
+    except Exception as e:
+        return f"Export Error: {e}"
     finally:
         conn.close()
 
 @app.route('/print_finance')
 def print_finance():
-    if 'user' not in session or session.get('role') not in ['Admin', 'Finance']: return "Unauthorized", 403
+    if 'user' not in session or session.get('role') not in ['Admin', 'Finance']:
+        return "Unauthorized", 403
     filter_type = request.args.get('filter')
     conn = get_db_connection()
     cur = conn.cursor()
+    vouchers = []
+    total_dr = 0
+    total_cr = 0
     try:
         query = """
             SELECT f.Record_Date, f.Voucher_Type, f.Voucher_No, f.Description, f.Account_Head, f.Dr_Amount, f.Cr_Amount, 
@@ -640,8 +671,8 @@ def print_finance():
         vouchers = cur.fetchall()
         total_dr = sum(v[5] for v in vouchers)
         total_cr = sum(v[6] for v in vouchers)
-    except:
-        vouchers = []; total_dr = total_cr = 0
+    except Exception as e:
+        print("Print Finance Error:", e)
     finally:
         cur.close()
         conn.close()
@@ -649,7 +680,8 @@ def print_finance():
 
 @app.route('/export_inventory_excel')
 def export_inventory_excel():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     try:
         query = """
@@ -663,14 +695,20 @@ def export_inventory_excel():
             df.to_excel(writer, index=False, sheet_name='Inventory_Report')
         output.seek(0)
         return send_file(output, download_name="Inventory_Report.xlsx", as_attachment=True)
+    except Exception as e:
+        return f"Export Error: {e}"
     finally:
         conn.close()
 
 @app.route('/print_inventory')
 def print_inventory():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     cur = conn.cursor()
+    items = []
+    total_in = 0
+    total_out = 0
     try:
         cur.execute("""
             SELECT i.Record_Date, i.Form_Type, i.Form_No, i.Item_Name, i.Qty_In, i.Qty_Out, COALESCE(l.Base_Type || ' (' || l.Project_Custom_Name || ')', i.To_Location) 
@@ -679,30 +717,35 @@ def print_inventory():
         items = cur.fetchall()
         total_in = sum(v[4] for v in items)
         total_out = sum(v[5] for v in items)
-    except:
-        items = []; total_in = total_out = 0
+    except Exception as e:
+        print("Print Inventory Error:", e)
     finally:
         cur.close()
         conn.close()
     return render_template('print_inventory.html', items=items, total_in=total_in, total_out=total_out)
 
 # ==========================================
-# ၉။ Purchase Orders (PO) အပိုင်း
+# Purchase Orders (PO)
 # ==========================================
 @app.route('/po')
 def view_po():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
-    if role not in ['Admin', 'Purchaser', 'Store Keeper']: return "Unauthorized", 403
+    if role not in ['Admin', 'Purchaser', 'Store Keeper']:
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
+    pos = []
     try:
         if role in ['Admin', 'Store Keeper']:
             cur.execute("SELECT * FROM Purchase_Orders ORDER BY Record_Date DESC")
         else:
             cur.execute("SELECT * FROM Purchase_Orders WHERE Created_By = %s ORDER BY Record_Date DESC", (session['user'],))
         pos = cur.fetchall()
+    except Exception as e:
+        print("View PO Error:", e)
     finally:
         cur.close()
         conn.close()
@@ -710,8 +753,10 @@ def view_po():
 
 @app.route('/add_po', methods=['GET', 'POST'])
 def add_po():
-    if 'user' not in session: return redirect('/login')
-    if session.get('role') not in ['Admin', 'Purchaser']: return "Unauthorized", 403
+    if 'user' not in session:
+        return redirect('/login')
+    if session.get('role') not in ['Admin', 'Purchaser']:
+        return "Unauthorized", 403
 
     conn = get_db_connection()
     cur = conn.cursor()
@@ -729,8 +774,9 @@ def add_po():
             cur.execute("INSERT INTO Purchase_Orders (PO_No, Item_Name, Qty, Estimated_Amount, Supplier_Name, Target_Location, Created_By) VALUES (%s, %s, %s, %s, %s, %s, %s)", (po_no, item_name, qty, amount, supplier, target_location, created_by))
             conn.commit()
             return redirect('/po')
-        except:
+        except Exception as e:
             conn.rollback()
+            print("Add PO Error:", e)
         finally:
             cur.close()
             conn.close()
@@ -743,12 +789,16 @@ def add_po():
 
 @app.route('/approve_po/<int:po_id>')
 def approve_po(po_id):
-    if 'user' not in session or session.get('role') != 'Admin': return "Admin Only", 403
+    if 'user' not in session or session.get('role') != 'Admin':
+        return "Admin Only", 403
     conn = get_db_connection()
     cur = conn.cursor()
     try:
         cur.execute("UPDATE Purchase_Orders SET Status = 'Approved' WHERE PO_ID = %s", (po_id,))
         conn.commit()
+    except Exception as e:
+        print("Approve PO Error:", e)
+        conn.rollback()
     finally:
         cur.close()
         conn.close()
@@ -756,7 +806,8 @@ def approve_po(po_id):
 
 @app.route('/delete_po/<int:po_id>')
 def delete_po(po_id):
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     role = session.get('role')
     user = session.get('user')
     conn = get_db_connection()
@@ -767,6 +818,9 @@ def delete_po(po_id):
         else:
             cur.execute("DELETE FROM Purchase_Orders WHERE PO_ID = %s AND Created_By = %s AND Status = 'Pending'", (po_id, user))
         conn.commit()
+    except Exception as e:
+        print("Delete PO Error:", e)
+        conn.rollback()
     finally:
         cur.close()
         conn.close()
@@ -774,7 +828,8 @@ def delete_po(po_id):
 
 @app.route('/export_po_excel')
 def export_po_excel():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     try:
         query = """
@@ -788,17 +843,23 @@ def export_po_excel():
             df.to_excel(writer, index=False, sheet_name='PO_Report')
         output.seek(0)
         return send_file(output, download_name="PO_Report.xlsx", as_attachment=True)
+    except Exception as e:
+        return f"Export PO Error: {e}"
     finally:
         conn.close()
 
 @app.route('/print_po')
 def print_po():
-    if 'user' not in session: return redirect('/login')
+    if 'user' not in session:
+        return redirect('/login')
     conn = get_db_connection()
     cur = conn.cursor()
+    pos = []
     try:
         cur.execute("SELECT Record_Date, PO_No, Item_Name, Qty, Estimated_Amount, Supplier_Name, Created_By, Status FROM Purchase_Orders ORDER BY Record_Date ASC")
         pos = cur.fetchall()
+    except Exception as e:
+        print("Print PO Error:", e)
     finally:
         cur.close()
         conn.close()
