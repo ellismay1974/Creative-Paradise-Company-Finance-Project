@@ -21,10 +21,6 @@
         .table thead th { border-bottom: 2px solid #e3e6f0; color: #4e73df; font-weight: 700; font-size: 0.85rem; text-transform: uppercase;}
         .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     </style>
-
-    <link rel="manifest" href="/static/manifest.json">
-    <link rel="icon" href="/static/icon.png" type="image/png">
-    <link rel="apple-touch-icon" href="/static/icon.png">
 </head>
 <body>
 
@@ -108,16 +104,22 @@
                             <tbody>
                                 {% for row in items %}
                                 <tr>
-                                    <td>{{ row[1] }}</td>
+                                    <td>{{ row[1].strftime('%Y-%m-%d') if row[1] else '' }}</td>
+                                    
                                     <td>
-                                        <span class="badge {% if row[2] == 'GRN' %}bg-success{% elif row[2] == 'GIN' %}bg-danger{% else %}bg-secondary{% endif %}">
+                                        <span class="badge {% if row[2] == 'GRN' or 'In' in row[2] %}bg-success{% elif row[2] == 'GIN' or 'Out' in row[2] %}bg-danger{% else %}bg-secondary{% endif %}">
                                             {{ row[2] }}
                                         </span>
                                     </td>
+                                    
                                     <td><strong>{{ row[3] }}</strong></td>
+                                    
                                     <td>{{ row[5] }}</td>
+                                    
                                     <td class="text-end text-success fw-bold">{{ row[6] if row[6] else '-' }}</td>
+                                    
                                     <td class="text-end text-danger fw-bold">{{ row[7] if row[7] else '-' }}</td>
+                                    
                                     <td>{{ row[9] }}</td>
                                 </tr>
                                 {% else %}
@@ -130,8 +132,7 @@
                             </tbody>
                         </table>
                     </div>
-
-                </div>
+                    </div>
             </div>
         </div>
     </div>
