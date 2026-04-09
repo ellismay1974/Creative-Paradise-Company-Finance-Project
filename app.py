@@ -101,13 +101,15 @@ def dashboard():
         if res: total_income = res[0]
 
         cur.execute("""
-            SELECT COALESCE(SUM(Dr_Amount), 0) 
+            SELECT COALESCE(SUM(Dr_Amount), 0) - COALESCE(SUM(Cr_Amount), 0)
             FROM Finance_Ledger 
             WHERE Account_Head IN ('Site Expense (WIP)', 'General Expense', 'Salary Expense', 'Fuel Expense', 'Office Expense', 'Transportation Expense')
         """)
-        res = cur.fetchone()
-        if res: total_expense = res[0]
+        expense_result = cur.fetchone()
+        if expense_result:
+            total_expense = expense_result[0]
 
+        
         cur.execute("SELECT COALESCE(SUM(Qty_In), 0) - COALESCE(SUM(Qty_Out), 0) FROM Inventory_Ledger")
         res = cur.fetchone()
         if res: stock_balance = res[0]
