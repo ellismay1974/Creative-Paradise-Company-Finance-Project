@@ -10,10 +10,21 @@
 </head>
 <body>
 <div class="container p-0" style="max-width: 600px;">
-    <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-3">
+    <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-3 border-top border-success border-4">
         <h5 class="text-success mb-4 fw-bold"><i class="fas fa-box-open me-2"></i>ပစ္စည်းအဝင် (GRN) သွင်းရန်</h5>
         <form action="/add_grn" method="POST">
             
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-size: 0.9rem; font-weight: 600;">GRN ဖောင်နံပါတ်</label>
+                    <input type="text" name="form_no" class="form-control" placeholder="ဥပမာ - RN-001" required>
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-size: 0.9rem; font-weight: 600;">ငွေစာရင်း ဘောက်ချာနံပါတ်</label>
+                    <input type="text" name="voucher_no" class="form-control" placeholder="ဥပမာ - DPC-0001 (သို့) JV-0001" required>
+                </div>
+            </div>
+
             <div class="mb-3 p-3 bg-light rounded border border-info">
                 <label class="text-info fw-bold mb-2" style="font-size: 0.9rem;"><i class="fas fa-link me-2"></i>ချိတ်ဆက်မည့် PO</label>
                 <select name="po_id" id="po_select" class="form-select border-info" onchange="autoFillPO()">
@@ -24,7 +35,6 @@
                     </option>
                     {% endfor %}
                 </select>
-                <small class="text-muted mt-1 d-block" style="font-size: 0.75rem;">Approve လုပ်ထားသော PO များသာ ပေါ်ပါမည်။</small>
             </div>
             
             <div class="mb-3">
@@ -34,11 +44,11 @@
             <div class="row g-2 mb-3">
                 <div class="col-6">
                     <label class="form-label" style="font-size: 0.9rem;">အရေအတွက်</label>
-                    <input type="number" name="qty" id="qty" class="form-control" required>
+                    <input type="number" step="0.01" name="qty" id="qty" class="form-control" required>
                 </div>
                 <div class="col-6">
                     <label class="form-label" style="font-size: 0.9rem;">ကျသင့်ငွေ (Total)</label>
-                    <input type="number" name="amount" id="amount" class="form-control" required>
+                    <input type="number" step="0.01" name="amount" id="amount" class="form-control" required>
                 </div>
             </div>
             
@@ -63,12 +73,10 @@
         </form>
     </div>
 </div>
-
 <script>
     function autoFillPO() {
         var select = document.getElementById("po_select");
         var selectedOption = select.options[select.selectedIndex];
-        
         if (select.value !== "") {
             document.getElementById("item_name").value = selectedOption.getAttribute("data-item");
             document.getElementById("qty").value = selectedOption.getAttribute("data-qty");

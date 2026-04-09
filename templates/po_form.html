@@ -13,9 +13,15 @@
     <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-2 border-top border-primary border-4">
         <h5 class="text-primary mb-4 fw-bold"><i class="fas fa-file-invoice me-2"></i>ပစ္စည်းဝယ်ယူရန် တောင်းခံခြင်း (PO)</h5>
         <form action="/add_po" method="POST">
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size: 0.9rem; font-weight: 600;">ပစ္စည်းအမည် (Item Name)</label>
-                <input type="text" name="item_name" class="form-control" placeholder="ဥပမာ - သံချောင်း (၁၆ မီလီ)" required>
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-sm-6">
+                    <label class="form-label text-muted" style="font-size: 0.9rem; font-weight: 600;">PO နံပါတ်</label>
+                    <input type="text" name="po_no" class="form-control" placeholder="ဥပမာ - PO-0001" required>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label class="form-label text-muted" style="font-size: 0.9rem; font-weight: 600;">ပစ္စည်းအမည် (Item Name)</label>
+                    <input type="text" name="item_name" class="form-control" required>
+                </div>
             </div>
             <div class="row g-3 mb-3">
                 <div class="col-12 col-sm-6">
@@ -24,7 +30,7 @@
                 </div>
                 <div class="col-12 col-sm-6">
                     <label class="form-label text-muted" style="font-size: 0.9rem; font-weight: 600;">ခန့်မှန်း ကျသင့်ငွေ (Estimated Amount)</label>
-                    <input type="number" step="0.01" name="amount" class="form-control" placeholder="ခန့်မှန်းတန်ဖိုး" required>
+                    <input type="number" step="0.01" name="amount" class="form-control" required>
                 </div>
             </div>
             <div class="mb-3">

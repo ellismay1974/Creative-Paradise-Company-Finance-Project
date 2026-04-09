@@ -13,16 +13,12 @@
     <div class="card shadow-sm border-0 rounded-3 p-3 p-md-4 mt-2 border-top border-warning border-4">
         <h5 class="text-warning text-dark mb-4 fw-bold"><i class="fas fa-money-bill-wave me-2"></i>အထွေထွေ အသုံးစရိတ် (Expense)</h5>
         <form action="/add_expense" method="POST">
-            <div class="mb-3">
-                <label class="form-label" style="font-size: 0.9rem;">အကြောင်းအရာ (Description)</label>
-                <input type="text" name="description" class="form-control" required>
-            </div>
             <div class="row g-2 mb-3">
-                <div class="col-6">
-                    <label class="form-label" style="font-size: 0.9rem;">ငွေပမာဏ (Amount Ks)</label>
-                    <input type="number" name="amount" class="form-control" required>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-size: 0.9rem;">ဘောက်ချာနံပါတ်</label>
+                    <input type="text" name="voucher_no" class="form-control" placeholder="ဥပမာ - DPC-0001" required>
                 </div>
-                <div class="col-6">
+                <div class="col-12 col-md-6">
                     <label class="form-label" style="font-size: 0.9rem;">စရိတ်ခေါင်းစဉ်</label>
                     <select name="expense_head" class="form-select" required>
                         <option value="General Expense">အထွေထွေစရိတ်</option>
@@ -33,14 +29,24 @@
                     </select>
                 </div>
             </div>
-            <div class="mb-4">
-                <label class="form-label" style="font-size: 0.9rem;">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
-                <select name="location" class="form-select" required>
-                    <option value="">-- ရွေးချယ်ပါ --</option>
-                    {% for loc in locations %}
-                    <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
-                    {% endfor %}
-                </select>
+            <div class="mb-3">
+                <label class="form-label" style="font-size: 0.9rem;">အကြောင်းအရာ (Description)</label>
+                <input type="text" name="description" class="form-control" required>
+            </div>
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">ငွေပမာဏ (Amount Ks)</label>
+                    <input type="number" name="amount" class="form-control" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label" style="font-size: 0.9rem;">သက်ဆိုင်သည့်တည်နေရာ (Location)</label>
+                    <select name="location" class="form-select" required>
+                        <option value="">-- ရွေးချယ်ပါ --</option>
+                        {% for loc in locations %}
+                        <option value="{{ loc[0] }}">{{ loc[1] }} ({{ loc[2] }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
             <button type="submit" class="btn btn-warning text-dark w-100 fw-bold py-2"><i class="fas fa-save me-2"></i>စာရင်းသွင်းမည်</button>
             <a href="/finance" class="btn btn-outline-secondary w-100 mt-2">နောက်သို့</a>
